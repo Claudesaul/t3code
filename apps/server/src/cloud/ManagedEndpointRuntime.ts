@@ -299,12 +299,16 @@ export const make = Effect.gen(function* () {
             const next = yield* Ref.get(activeRef);
             if (!next) {
               yield* Effect.logWarning("Relay client did not start after the update", status);
-              if (previous) {
-                // The old connector still serves; the retry loop tries the pin again.
+              // A still-running old connector keeps serving and the retry loop
+              // tries the pin again. One that exited while detached was skipped
+              // by its supervisor, so ask for recovery like an exited connector.
+              const previousRunning = previous
+                ? yield* previous.child.isRunning.pipe(Effect.orElseSucceed(() => false))
+                : false;
+              if (previous && previousRunning) {
                 yield* Ref.set(activeRef, previous);
               } else {
-                // No supervisor watches a failed spawn, so ask for recovery like
-                // an exited connector would.
+                yield* stopConnector(previous);
                 yield* Queue.offer(recoveryRequests, desiredConfig);
               }
               return;
