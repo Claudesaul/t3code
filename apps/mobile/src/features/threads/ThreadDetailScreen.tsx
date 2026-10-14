@@ -1390,7 +1390,7 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                 </View>
 
                 {/* Hidden (not unmounted) while a user-input request owns the
-                composer slot, so composer drafts and editor state survive.
+                composer slot, so the composer's state survives.
                 A rejected creation has no thread to send to; the failure card
                 owns the slot instead. */}
                 <View style={composerSlotHidden ? { display: "none" } : undefined}>
@@ -1460,6 +1460,7 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                         draftKey={props.composerDraftKey ?? undefined}
                         followUpBehavior={props.followUpBehavior}
                         canSteerActiveTurn={props.canSteerActiveTurn}
+                        hidden={composerSlotHidden}
                         queuedEdit={
                           props.queuedRunEdit === null
                             ? null
