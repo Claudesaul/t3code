@@ -1365,6 +1365,7 @@ export const ThreadDetailScreen = memo(function ThreadDetailScreen(props: Thread
                         draftKey={props.composerDraftKey ?? undefined}
                         followUpBehavior={props.followUpBehavior}
                         canSteerActiveTurn={props.canSteerActiveTurn}
+                        hidden={composerSlotHidden}
                         queuedEdit={
                           props.queuedRunEdit === null
                             ? null
