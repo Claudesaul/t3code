@@ -1326,6 +1326,7 @@ export const ThreadDetailScreen = function ThreadDetailScreen(props: ThreadDetai
                         draftKey={props.composerDraftKey ?? undefined}
                         followUpBehavior={props.followUpBehavior}
                         canSteerActiveTurn={props.canSteerActiveTurn}
+                        hidden={composerSlotHidden}
                         queuedEdit={
                           props.queuedRunEdit === null
                             ? null
