@@ -790,7 +790,7 @@ export const ThreadComposer = function ThreadComposer(props: ThreadComposerProps
               layout={COMPOSER_LAYOUT_TRANSITION}
             >
               <ComposerEditor
-                key={props.hidden ? "hidden" : "visible"}
+                hidden={props.hidden}
                 draftKey={composerDraftKey}
                 environmentId={props.environmentId}
                 onOpenMention={(path) => {
