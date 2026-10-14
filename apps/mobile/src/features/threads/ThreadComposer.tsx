@@ -855,7 +855,7 @@ export const ThreadComposer = memo(function ThreadComposer(props: ThreadComposer
               layout={COMPOSER_LAYOUT_TRANSITION}
             >
               <ComposerEditor
-                key={props.hidden ? "hidden" : "visible"}
+                hidden={props.hidden}
                 draftKey={composerDraftKey}
                 environmentId={props.environmentId}
                 onOpenMention={(path) => {
