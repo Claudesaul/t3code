@@ -1477,12 +1477,21 @@ describe("a second ask into the same composer", () => {
     );
   });
 
-  it("keeps a handoff reference when the next action deliberately repeats it", () => {
+  it("replaces the same pull request's last ask instead of stacking a second one", () => {
     const previous = chip("pull-request-context:42");
-    const prompt = formatInlineContextReference(reviewCommentContextReference(previous));
-    expect(stripPullRequestHandoffReferences(prompt, [previous], new Set([previous.id]))).toBe(
-      prompt,
-    );
+    const handed = "Explain this pull request.";
+    const prompt = `${handed} ${formatInlineContextReference(
+      reviewCommentContextReference(previous),
+    )} `;
+    expect(
+      handoffPrompt(
+        {
+          prompt: stripPullRequestHandoffReferences(prompt, [previous]),
+          lastHandoffPrompt: handed,
+        },
+        handed,
+      ),
+    ).toBe(handed);
   });
 
   it("replaces the last ask's prompt with this one's", () => {

@@ -458,6 +458,19 @@ describe.each([
   });
 });
 
+it("replaces a repeated Explain in the composer instead of stacking it", async () => {
+  setup();
+  await using _screen = await render({ composerDraftTarget: draftId, threadRef });
+  const draft = () => useComposerDraftStore.getState().getComposerDraft(draftId);
+  await runAction("Explain this PR");
+  await vi.waitFor(() => expect(draft()?.reviewComments).toHaveLength(1));
+  const first = draft()?.prompt;
+  expect(first).toContain("Explain this pull request.");
+  await runAction("Explain this PR");
+  await vi.waitFor(() => expect(draft()?.prompt).toBe(first));
+  expect(draft()?.reviewComments).toHaveLength(1);
+});
+
 it("offers both selection actions and queues a permitted host review locally", async () => {
   setup();
   currentDetail = {
