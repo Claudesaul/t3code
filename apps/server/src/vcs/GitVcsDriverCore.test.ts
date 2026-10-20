@@ -5154,8 +5154,8 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             .pipe(Effect.result, Effect.forkChild({ startImmediately: true }));
           yield* Deferred.await(started);
           if (failure === "timeout") {
-            yield* TestClock.adjust("31 seconds");
-            yield* TestClock.adjust("31 seconds");
+            yield* TestClock.adjust("301 seconds");
+            yield* TestClock.adjust("301 seconds");
           }
           const result = yield* Fiber.join(fetching);
           assert.isTrue(Result.isFailure(result));
@@ -5171,6 +5171,40 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             );
           }
         }),
+    );
+
+    it.effect("lets a scoped fetch run past the default 30-second Git timeout", () =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        const delegate = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const started = yield* Deferred.make<void>();
+        const finish = yield* Deferred.make<void>();
+        const spawner = ChildProcessSpawner.make((command) =>
+          Effect.gen(function* () {
+            if (!ChildProcess.isStandardCommand(command))
+              return yield* Effect.die("unexpected command");
+            if (command.args[0] !== "fetch") return yield* delegate.spawn(command);
+            yield* Deferred.succeed(started, undefined);
+            return ChildProcessSpawner.makeHandle({
+              ...makeNonRepositoryHandle(),
+              exitCode: Deferred.await(finish).pipe(Effect.as(ChildProcessSpawner.ExitCode(0))),
+              stderr: Stream.empty,
+            });
+          }),
+        );
+        const driver = yield* makeGitVcsDriverCore().pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.provide(layerServerConfig),
+        );
+        const fetching = yield* driver
+          .fetchRemote({ cwd, remoteName: "origin", refName: "main" })
+          .pipe(Effect.result, Effect.forkChild({ startImmediately: true }));
+        yield* Deferred.await(started);
+        yield* TestClock.adjust("2 minutes");
+        yield* Deferred.succeed(finish, undefined);
+        const result = yield* Fiber.join(fetching);
+        assert.isTrue(Result.isSuccess(result));
+      }),
     );
 
     it.effect("creates a worktree from the latest fetched remote commit", () =>
