@@ -1139,6 +1139,7 @@ export const ThreadDetailScreen = function ThreadDetailScreen(props: ThreadDetai
               threadTitle={props.selectedThread.title}
               latestRun={props.activityRun}
               activeWorkStartedAt={props.activeWorkStartedAt}
+              isCompacting={props.isCompacting}
               runlessWorkActive={props.runlessWorkActive ?? false}
               listRef={listRef}
               freeze={freeze}
