@@ -766,6 +766,10 @@ export function ReviewSheet(props: ReviewSheetProps) {
             </View>
           ) : (
             <ScrollView
+              // A refresh that starts programmatically adds its height to the native top inset
+              // and subtracts it when it ends. If topContentInset changes in between, the inset
+              // ends up short and the content sits under the header, so start over instead.
+              key={topContentInset}
               contentContainerStyle={
                 Platform.OS === "android" && (parsedDiff.kind === "empty" || !selectedSection)
                   ? { flexGrow: 1, justifyContent: "center" }
