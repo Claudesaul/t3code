@@ -38,7 +38,7 @@ export function WizardHeader({
   readonly children?: ReactNode;
 }) {
   return (
-    <DialogHeader className="shrink-0">
+    <DialogHeader>
       <DialogTitle className={identity ? "sr-only" : undefined}>{title}</DialogTitle>
       {identity}
       {description ? <DialogDescription>{description}</DialogDescription> : null}
@@ -55,7 +55,7 @@ export function WizardFooter({
   readonly leading?: ReactNode;
 }) {
   return (
-    <DialogFooter variant="bare" className={cn("shrink-0", leading && "sm:justify-between")}>
+    <DialogFooter variant="bare" className={leading ? "sm:justify-between" : undefined}>
       {leading}
       {leading ? (
         <div className="flex flex-col-reverse gap-2 sm:flex-row">{children}</div>
