@@ -131,8 +131,7 @@ export function HtmlRenderWebView(props: {
         accessibilityLabel={props.title}
         style={{ flex: 1, backgroundColor: "transparent" }}
         allowsInlineMediaPlayback
-        // Full screen, the page sits under the translucent header. iOS insets it below
-        // the header; react-native-webview otherwise leaves the inset at "never".
+        // Expanded pages extend under the iOS header and need native safe-area insets.
         contentInsetAdjustmentBehavior={props.nested ? "never" : "automatic"}
         bounces={!props.nested}
         showsVerticalScrollIndicator={!props.nested}
