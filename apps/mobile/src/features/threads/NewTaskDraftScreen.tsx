@@ -97,6 +97,9 @@ import { appAtomRegistry } from "../../state/atom-registry";
 
 import { readEnvironmentScope, useEnvironmentScope } from "../../state/session";
 
+// The checkout and branch row measures 47.33pt at the default text size.
+const WORKSPACE_CONTROLS_HEIGHT = 48;
+
 function NewTaskWorkspaceIcon(props: {
   readonly workspaceMode: "local" | "worktree";
   readonly worktreePath: string | null;
@@ -903,6 +906,7 @@ export function NewTaskDraftScreen(props: {
         }
         draftMode={{
           content: heroViewport,
+          estimatedControlsHeight: flow.canChooseWorkspace ? WORKSPACE_CONTROLS_HEIGHT : 0,
           controls: (
             <View className="pb-1">
               {projectClone && projectClone.phase !== "done" && selectedProject ? (
