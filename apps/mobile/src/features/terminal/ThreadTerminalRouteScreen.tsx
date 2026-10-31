@@ -1288,7 +1288,11 @@ export function ThreadTerminalRouteScreen(props: ThreadTerminalRouteScreenProps)
                   }}
                   className="px-4 pt-2"
                   style={{
-                    paddingBottom: 8 + (nativeColumnMetrics?.safeArea.bottom ?? insets.bottom),
+                    paddingBottom:
+                      8 +
+                      (keyboardState.isVisible
+                        ? 0
+                        : (nativeColumnMetrics?.safeArea.bottom ?? insets.bottom)),
                   }}
                 >
                   <Text style={{ color: terminalTheme.foreground }}>Attach visible output</Text>
