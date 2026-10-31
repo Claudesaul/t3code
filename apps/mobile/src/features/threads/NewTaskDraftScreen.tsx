@@ -1,4 +1,5 @@
 import { DraftEnvironmentControl } from "./DraftEnvironmentControl";
+import { resolveDraftHeroVariant } from "./draftHeroLayout";
 import { NativeScrollEdgeEffectsContext } from "../../native/NativeScrollViewMarker";
 import { DraftThreadHeader } from "./DraftThreadHeader";
 import { threadHeaderAppearance } from "./thread-header-appearance";
@@ -729,23 +730,29 @@ export function NewTaskDraftScreen(props: {
       The shared content is no longer in the inbox. You can continue editing this task draft.
     </Text>
   ) : null;
+  const projectControlLabel = flow.isScratchDraft
+    ? "No project"
+    : (selectedProjectLabel ?? selectedProject.title);
+  const projectControls = (
+    <View className="flex-row flex-wrap items-center justify-center gap-x-1">
+      <ComposerInlineControl
+        accessibilityHint="Opens the project picker"
+        accessibilityLabel={projectControlLabel}
+        chevronDirection="right"
+        disabled={isComposerInteractionLocked}
+        icon="folder"
+        label={projectControlLabel}
+        onPress={chooseProject}
+      />
+      {environmentControl}
+    </View>
+  );
   const hero = flow.isScratchDraft ? (
     <View className="items-center gap-2 px-6" testID="new-task-hero">
       <Text className="text-center text-2xl font-t3-medium tracking-tight text-foreground">
         What should we work on?
       </Text>
-      <View className="flex-row flex-wrap items-center justify-center gap-x-1">
-        <ComposerInlineControl
-          accessibilityHint="Opens the project picker"
-          accessibilityLabel="No project"
-          chevronDirection="right"
-          disabled={isComposerInteractionLocked}
-          icon="folder"
-          label="No project"
-          onPress={chooseProject}
-        />
-        {environmentControl}
-      </View>
+      {projectControls}
       {shareUnavailableNotice}
     </View>
   ) : (
@@ -780,8 +787,10 @@ export function NewTaskDraftScreen(props: {
     </View>
   );
   // The nested hero scroll view does not receive UIKit's automatic navigation inset in split columns.
-  const heroViewport = (headerInset: number, bottomInset: number, availableHeight: number) =>
-    availableHeight < 180 ? null : (
+  const heroViewport = (headerInset: number, bottomInset: number, availableHeight: number) => {
+    const heroVariant = resolveDraftHeroVariant(availableHeight);
+    if (heroVariant === "hidden") return null;
+    return (
       <NativeScrollEdgeEffectsContext
         value={{ top: "hidden", bottom: "hidden", left: "hidden", right: "hidden" }}
       >
@@ -801,7 +810,7 @@ export function NewTaskDraftScreen(props: {
             className="flex-1"
             contentInsetAdjustmentBehavior="never"
             contentContainerClassName="grow items-center"
-            contentContainerStyle={{ paddingVertical: 24 }}
+            contentContainerStyle={{ paddingVertical: heroVariant === "compact" ? 4 : 24 }}
             keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -809,12 +818,19 @@ export function NewTaskDraftScreen(props: {
             testID="new-task-hero-scroll"
           >
             <View style={{ flexGrow: 1 }} />
-            {hero}
+            {heroVariant === "compact" ? (
+              <View className="px-6" testID="new-task-compact-hero">
+                {projectControls}
+              </View>
+            ) : (
+              hero
+            )}
             <View style={{ flexGrow: 2 }} />
           </ScrollView>
         </View>
       </NativeScrollEdgeEffectsContext>
     );
+  };
 
   const workspaceControls = (
     <View className="flex-row items-center gap-1 px-2">
