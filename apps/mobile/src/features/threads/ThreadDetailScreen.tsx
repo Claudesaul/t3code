@@ -204,8 +204,6 @@ import { useGlobalVoiceInput } from "../voice-input/VoiceInputProvider";
 export interface ThreadDetailScreenProps {
   readonly header?: React.ReactNode;
   readonly draftMode?: {
-    /** Height of `controls` before they are measured, so the hero's first layout is its final one. */
-    readonly estimatedControlsHeight: number;
     readonly content: (
       headerInset: number,
       bottomInset: number,
@@ -345,7 +343,6 @@ const threadVisitTracker = createThreadVisitTracker({
 
 // Past the composer's 180 ms height animation.
 const COMPOSER_HEIGHT_SETTLE_MS = 220;
-const IOS_HEADER_BAR_HEIGHT = 54;
 const NO_RUN_STOP_ATOM = Atom.make<RunStopPresentation | null>(null).pipe(
   Atom.withLabel("mobile-thread-run-stop:empty"),
 );
@@ -859,11 +856,11 @@ function ThreadDetailBody(props: ThreadDetailScreenProps) {
     ) ||
     (props.historyControls?.hasMoreHistory === true &&
       props.selectedThread.latestUserMessageAt !== null);
-  const estimatedComposerHeight =
+  const composerOverlapHeight =
+    composerHeight ??
     COMPOSER_COLLAPSED_CHROME +
-    (!isProviderSubagent && (deviceType === "pad" || hasSidebarTabBar) ? 14 : 0) +
-    composerBottomInset;
-  const composerOverlapHeight = composerHeight ?? estimatedComposerHeight;
+      (!isProviderSubagent && (deviceType === "pad" || hasSidebarTabBar) ? 14 : 0) +
+      composerBottomInset;
   // The last collapse toggle; it only applies to the request it was made on.
   const [userInputToggle, setUserInputToggle] = useState<{
     readonly requestId: RuntimeRequestId;
@@ -1340,29 +1337,19 @@ function ThreadDetailBody(props: ThreadDetailScreenProps) {
     feedTouchStartRef.current = null;
   };
 
-  // The hero centers between these. Both start low while the screen pushes (the composer before it
-  // is measured, the header until UIKit reports its real height), so each has a floor at its
-  // settled size or the hero visibly drops into place after the push.
-  const draftHeroHeaderInset =
-    Platform.OS === "ios" && insets.top < navigationHeaderHeight
-      ? Math.max(navigationHeaderHeight, insets.top + IOS_HEADER_BAR_HEIGHT)
-      : navigationHeaderHeight;
-  const draftHeroBottomInset =
-    liveKeyboardHeight +
-    Math.max(
-      estimatedOverlayHeight,
-      estimatedComposerHeight + (props.draftMode?.estimatedControlsHeight ?? 0),
-    ) +
-    24;
-
   return (
     <View className="flex-1" onLayout={handleScreenLayout}>
       {!usesNativeWorkspaceColumns ? <NativeLayoutObserver onChange={setScreenMetrics} /> : null}
       {props.draftMode ? (
         props.draftMode.content(
-          draftHeroHeaderInset,
-          draftHeroBottomInset,
-          screenAreaHeight - draftHeroHeaderInset - draftHeroBottomInset,
+          // Not centered: the header and composer settle mid-push, which would move the hero.
+          Math.max(navigationHeaderHeight, (screenAreaHeight - liveKeyboardHeight) * 0.3),
+          liveKeyboardHeight + estimatedOverlayHeight + 24,
+          screenAreaHeight -
+            navigationHeaderHeight -
+            liveKeyboardHeight -
+            estimatedOverlayHeight -
+            24,
         )
       ) : showContent ? (
         <View
