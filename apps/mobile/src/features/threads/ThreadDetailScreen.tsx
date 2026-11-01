@@ -75,6 +75,7 @@ import type { FollowUpBehavior } from "../../lib/followUpBehavior";
 import type { ActiveTurnComposerAction } from "@t3tools/client-runtime/state/composer-dispatch";
 import * as Haptics from "expo-haptics";
 import {
+  type ComponentProps,
   useCallback,
   useContext,
   useEffect,
@@ -202,12 +203,14 @@ import { resolveThreadFeedSubmissionAnchor } from "./thread-feed-live-follow";
 import { useOpenLinkedThread } from "./useOpenLinkedThread";
 import { useGlobalVoiceInput } from "../voice-input/VoiceInputProvider";
 
+export type DraftViewportStyle = ComponentProps<typeof Animated.View>["style"];
+
 export interface ThreadDetailScreenProps {
   readonly header?: React.ReactNode;
   readonly draftMode?: {
     readonly content: (
       headerInset: number,
-      bottomInset: number,
+      viewportStyle: DraftViewportStyle,
       availableHeight: number,
     ) => React.ReactNode;
     readonly controls: React.ReactNode;
@@ -486,7 +489,13 @@ function ThreadDetailBody(props: ThreadDetailScreenProps) {
   // frames on the UI thread through onComposerLayout; this is only an estimate, so committing
   // each frame would re-render the whole screen for the length of the animation.
   const composerHeightSettle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftComposerHeight = useSharedValue<number | null>(null);
   const handleComposerHeightChange = (height: number) => {
+    draftComposerHeight.set(
+      draftComposerHeight.get() === null
+        ? height
+        : withTiming(height, { duration: COMPOSER_HEIGHT_SETTLE_MS }),
+    );
     setComposerHeight((current) => current ?? height);
     if (composerHeightSettle.current !== null) clearTimeout(composerHeightSettle.current);
     composerHeightSettle.current = setTimeout(() => {
@@ -954,7 +963,8 @@ function ThreadDetailBody(props: ThreadDetailScreenProps) {
   // The question card reads the keyboard frame on the UI thread, in the same frame the sticky
   // view translates, so it gets the full height while the keyboard is closed and never crosses
   // the header while the keyboard moves.
-  const { height: keyboardTranslation } = useReanimatedKeyboardAnimation();
+  const { height: keyboardTranslation, progress: keyboardProgress } =
+    useReanimatedKeyboardAnimation();
   const pendingUserInputMaxHeight = useDerivedValue(() =>
     derivePendingUserInputMaxHeight({
       windowHeight: screenAreaHeight,
@@ -1351,13 +1361,23 @@ function ThreadDetailBody(props: ThreadDetailScreenProps) {
     24 -
     (liveKeyboardHeight > 0 && keyboardStickyEnabled ? composerKeyboardOffset : 0);
 
+  // Follows the composer frame by frame, so the hero moves with the keyboard in one motion.
+  const draftHeroViewportStyle = useAnimatedStyle(() => ({
+    bottom:
+      (draftComposerHeight.value ?? estimatedOverlayHeight) +
+      24 +
+      (keyboardStickyEnabled
+        ? -keyboardTranslation.value - keyboardProgress.value * composerKeyboardOffset
+        : 0),
+  }));
+
   return (
     <View className="flex-1" onLayout={handleScreenLayout}>
       {!usesNativeWorkspaceColumns ? <NativeLayoutObserver onChange={setScreenMetrics} /> : null}
       {props.draftMode ? (
         props.draftMode.content(
           navigationHeaderHeight,
-          draftComposerClearance,
+          draftHeroViewportStyle,
           screenAreaHeight - navigationHeaderHeight - draftComposerClearance,
         )
       ) : showContent ? (

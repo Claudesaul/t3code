@@ -1,4 +1,5 @@
 import { DraftEnvironmentControl } from "./DraftEnvironmentControl";
+import type { DraftViewportStyle } from "./ThreadDetailScreen";
 import { NativeScrollEdgeEffectsContext } from "../../native/NativeScrollViewMarker";
 import { DraftThreadHeader } from "./DraftThreadHeader";
 import { threadHeaderAppearance } from "./thread-header-appearance";
@@ -30,6 +31,7 @@ import {
 } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { KeyboardController } from "react-native-keyboard-controller";
 
@@ -780,21 +782,21 @@ export function NewTaskDraftScreen(props: {
     </View>
   );
   // The nested hero scroll view does not receive UIKit's automatic navigation inset in split columns.
-  const heroViewport = (headerInset: number, bottomInset: number, availableHeight: number) =>
+  const heroViewport = (
+    headerInset: number,
+    viewportStyle: DraftViewportStyle,
+    availableHeight: number,
+  ) =>
     availableHeight < 156 ? null : (
       <NativeScrollEdgeEffectsContext
         value={{ top: "hidden", bottom: "hidden", left: "hidden", right: "hidden" }}
       >
-        <View
+        <Animated.View
           collapsable={false}
-          style={{
-            position: "absolute",
-            top: headerInset,
-            bottom: bottomInset,
-            left: 0,
-            right: 0,
-            overflow: "hidden",
-          }}
+          style={[
+            { position: "absolute", top: headerInset, left: 0, right: 0, overflow: "hidden" },
+            viewportStyle,
+          ]}
         >
           <ScrollView
             alwaysBounceVertical={false}
@@ -812,7 +814,7 @@ export function NewTaskDraftScreen(props: {
             {hero}
             <View style={{ flexGrow: 2 }} />
           </ScrollView>
-        </View>
+        </Animated.View>
       </NativeScrollEdgeEffectsContext>
     );
 
