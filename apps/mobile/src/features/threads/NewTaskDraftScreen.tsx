@@ -1,5 +1,4 @@
 import { DraftEnvironmentControl } from "./DraftEnvironmentControl";
-import { resolveDraftHeroVariant } from "./draftHeroLayout";
 import { NativeScrollEdgeEffectsContext } from "../../native/NativeScrollViewMarker";
 import { DraftThreadHeader } from "./DraftThreadHeader";
 import { threadHeaderAppearance } from "./thread-header-appearance";
@@ -787,10 +786,8 @@ export function NewTaskDraftScreen(props: {
     </View>
   );
   // The nested hero scroll view does not receive UIKit's automatic navigation inset in split columns.
-  const heroViewport = (headerInset: number, bottomInset: number, availableHeight: number) => {
-    const heroVariant = resolveDraftHeroVariant(availableHeight);
-    if (heroVariant === "hidden") return null;
-    return (
+  const heroViewport = (headerInset: number, bottomInset: number, availableHeight: number) =>
+    availableHeight < 52 ? null : (
       <NativeScrollEdgeEffectsContext
         value={{ top: "hidden", bottom: "hidden", left: "hidden", right: "hidden" }}
       >
@@ -810,7 +807,7 @@ export function NewTaskDraftScreen(props: {
             className="flex-1"
             contentInsetAdjustmentBehavior="never"
             contentContainerClassName="grow items-center"
-            contentContainerStyle={{ paddingVertical: heroVariant === "compact" ? 4 : 24 }}
+            contentContainerStyle={{ paddingVertical: availableHeight < 180 ? 4 : 24 }}
             keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -818,19 +815,12 @@ export function NewTaskDraftScreen(props: {
             testID="new-task-hero-scroll"
           >
             <View style={{ flexGrow: 1 }} />
-            {heroVariant === "compact" ? (
-              <View className="px-6" testID="new-task-compact-hero">
-                {projectControls}
-              </View>
-            ) : (
-              hero
-            )}
+            {availableHeight < 180 ? <View className="px-6">{projectControls}</View> : hero}
             <View style={{ flexGrow: 2 }} />
           </ScrollView>
         </View>
       </NativeScrollEdgeEffectsContext>
     );
-  };
 
   const workspaceControls = (
     <View className="flex-row items-center gap-1 px-2">
